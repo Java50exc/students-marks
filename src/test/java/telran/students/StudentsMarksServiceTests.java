@@ -3,19 +3,16 @@ package telran.students;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.ClassOrderer;
-import org.junit.jupiter.api.Order;
+import static telran.students.TestDb.*;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestClassOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import telran.students.dto.Mark;
-import telran.students.dto.Student;
-import telran.students.exceptions.StudentIllegalStateException;
-import telran.students.exceptions.StudentNotFoundException;
+import telran.students.dto.*;
+import telran.students.exceptions.*;
 import telran.students.repo.StudentRepo;
 import telran.students.service.StudentsService;
 
@@ -61,5 +58,25 @@ class StudentsMarksServiceTests {
 //				()->studentsService.addMark(ID1 + 1000, mark));
 		
 	}
+	@Test
+	void getStudentTest() {
+		assertEquals(students[0], studentsService.getStudent(ID1));
+		assertThrowsExactly(StudentNotFoundException.class, ()->studentsService.getStudent(100000));
+	}
+	@Test
+	void getMarksTest() {
+		assertArrayEquals(marks[0], studentsService.getMarks(ID1).toArray(Mark[]::new));
+		assertThrowsExactly(StudentNotFoundException.class, ()->studentsService.getMarks(100000));
+	}
+	@Test
+	void getStudentByPhoneNumberTest() {
+		assertEquals(students[0], studentsService.getStudentByPhoneNumber(PHONE1));
+	}
+	@Test
+	void getStudentsByPhonePrefix() {
+		List<Student> expected = List.of(students[0], students[6]);
+		assertIterableEquals(expected, studentsService.getStudentsByPhonePrefix("051"));
+	}
+	
 
 }
