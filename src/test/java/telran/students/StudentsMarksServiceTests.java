@@ -77,6 +77,8 @@ class StudentsMarksServiceTests {
 		List<Student> expected = List.of(students[0], students[6]);
 		assertIterableEquals(expected, studentsService.getStudentsByPhonePrefix("051"));
 	}
+	//TODO tests of the interface methods for HW #71 (see StudentsService interface)
+	
 	
 
 }
