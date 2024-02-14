@@ -137,7 +137,7 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
-	public List<Student> getStudentsGoodSubjectMark(int markThreshold) {
+	public List<Student> getStudentsGoodSubjectMark(String subject, int markThreshold) {
 		// TODO Auto-generated method stub
 		return null;
 	}

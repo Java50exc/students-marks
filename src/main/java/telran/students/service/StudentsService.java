@@ -37,7 +37,7 @@ public interface StudentsService {
 	 * @param markThreshold
 	 * @return students having a mark of a given subject greater than a given markThreshold
 	 */
-	List<Student> getStudentsGoodSubjectMark(int markThreshold);
+	List<Student> getStudentsGoodSubjectMark(String subject, int markThreshold);
 	//The methods for the CW #72 (next CW)
 	/**
 	 * 
