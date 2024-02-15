@@ -8,7 +8,6 @@ public class StudentNotFoundException extends NotFoundException{
 
 	public StudentNotFoundException() {
 		super(ServiceErrorMessages.STUDENT_NOT_FOUND);
-		// TODO Auto-generated constructor stub
 	}
 
 }

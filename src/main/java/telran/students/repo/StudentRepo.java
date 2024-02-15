@@ -1,5 +1,6 @@
 package telran.students.repo;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -15,5 +16,8 @@ StudentDoc findStudentOnlyMarks(long id);
 /********************************/
 IdPhone findByPhone(String phone);
 List<IdPhone> findByPhoneRegex(String regex);
+List<IdPhone> findByMarksDate(LocalDate date);
+List<IdPhone> findByMarksDateBetween(LocalDate firstDate, LocalDate lastDate);
+List<IdPhone> findByMarksSubjectAndMarksScoreGreaterThan(String subject, int markThreshold);
 
 }

@@ -1,6 +1,7 @@
 package telran.students.service;
 
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -62,8 +63,10 @@ public class StudentsServiceImpl implements StudentsService {
 
 	@Override
 	public Student removeStudent(long id) {
-		// TODO Auto-generated method stub
-		return null;
+		Student student = getStudent(id);
+		studentRepo.deleteById(id);
+		log.debug("student {} has been remved", student);
+		return student;
 	}
 
 	@Override
@@ -118,28 +121,41 @@ public class StudentsServiceImpl implements StudentsService {
 	@Override
 	public List<Student> getStudentsByPhonePrefix(String prefix) {
 		List<IdPhone> idPhones = studentRepo.findByPhoneRegex(prefix + ".+");
-		List<Student> res = idPhones.stream()
-				.map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+		List<Student> res = idPhonesToStudents(idPhones);
 		log.debug("students {}", res);
 		return res;
 	}
 
+	private List<Student> idPhonesToStudents(List<IdPhone> idPhones) {
+		return idPhones.stream()
+				.map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+	}
+
 	@Override
 	public List<Student> getStudentsMarksDate(LocalDate date) {
-		// TODO Auto-generated method stub
-		return null;
+		List<IdPhone> idPhones = studentRepo.findByMarksDate(date);
+		List<Student> res = idPhonesToStudents(idPhones);
+		log.debug("Students having a mark on date {} are {}", date, res);
+		return res;
 	}
 
 	@Override
 	public List<Student> getStudentsMarksMonthYear(int month, int year) {
-		// TODO Auto-generated method stub
-		return null;
+		LocalDate firstDate = LocalDate.of(year, month, 1);
+		LocalDate lastDate = firstDate.with(TemporalAdjusters.lastDayOfMonth());
+		List<IdPhone> idPhones = studentRepo.findByMarksDateBetween(firstDate, lastDate);
+		List<Student> res = idPhonesToStudents(idPhones);
+		log.debug("students having marks on month {} of year {} are {}", month, year, res);
+		return res;
 	}
 
 	@Override
 	public List<Student> getStudentsGoodSubjectMark(String subject, int markThreshold) {
-		// TODO Auto-generated method stub
-		return null;
+		List<IdPhone> idPhones = studentRepo.findByMarksSubjectAndMarksScoreGreaterThan(subject, markThreshold);
+		List<Student> res = idPhonesToStudents(idPhones);
+		log.debug("students having marks on subject {} better than {} are {}", subject,
+				markThreshold);
+		return res;
 	}
 
 }
