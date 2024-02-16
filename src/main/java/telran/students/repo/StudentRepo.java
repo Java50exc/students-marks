@@ -19,5 +19,11 @@ List<IdPhone> findByPhoneRegex(String regex);
 List<IdPhone> findByMarksDate(LocalDate date);
 List<IdPhone> findByMarksDateBetween(LocalDate firstDate, LocalDate lastDate);
 List<IdPhone> findByMarksSubjectAndMarksScoreGreaterThan(String subject, int markThreshold);
+/*******************/
+@Query("{$and:[{marks:{$elemMatch:{score:{$gt:?0}}}},{marks:{$not:{$elemMatch:{score:{$lte:?0}}}}}]}")
+List<IdPhone> findAllGoodMarks(int markThreshold);
+/**********************************************************/
+@Query("{$expr:{$lt:[{$size:$marks}, ?0]}}")
+List<IdPhone> findFewMarks(int nMarks);
 
 }

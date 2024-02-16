@@ -56,7 +56,7 @@ public class TestDb {
 			 new Mark(SUBJECT2,80, DATE3)
 			 },
 			{new Mark(SUBJECT2,70,DATE1),
-			 new Mark(SUBJECT3,80, DATE2),
+			 new Mark(SUBJECT3,85, DATE2),
 				 new Mark(SUBJECT4,80, DATE3)
 			},
 			{new Mark(SUBJECT3,70,DATE1),
@@ -68,7 +68,7 @@ public class TestDb {
 			new Mark(SUBJECT1, 70, DATE3),
 			new Mark(SUBJECT4, 70, DATE4),
 			},
-			{new Mark(SUBJECT4, 100, DATE3)},
+			{new Mark(SUBJECT4, 95, DATE3)},
 			{
 				new Mark(SUBJECT1, 100, DATE1),
 				new Mark(SUBJECT2, 100, DATE2),

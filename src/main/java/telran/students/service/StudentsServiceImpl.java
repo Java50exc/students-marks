@@ -1,9 +1,16 @@
 package telran.students.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.temporal.TemporalAdjusters;
+import java.util.Arrays;
 import java.util.List;
 
+import org.bson.Document;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import telran.students.dto.Mark;
 import telran.students.dto.Student;
+import telran.students.dto.StudentAvgScore;
 import telran.students.exceptions.StudentIllegalStateException;
 import telran.students.exceptions.StudentNotFoundException;
 import telran.students.model.StudentDoc;
@@ -21,6 +29,7 @@ import telran.students.repo.StudentRepo;
 @Slf4j
 public class StudentsServiceImpl implements StudentsService {
 	final StudentRepo studentRepo;
+	final MongoTemplate mongoTemplate;
 	@Override
 	@Transactional
 	public Student addStudent(Student student) {
@@ -96,14 +105,18 @@ public class StudentsServiceImpl implements StudentsService {
 
 	@Override
 	public List<Student> getStudentsAllGoodMarks(int markThreshold) {
-		// Will be implemented on the CW #72
-		return null;
+		List<IdPhone> idPhones = studentRepo.findAllGoodMarks(markThreshold);
+		List<Student> res = idPhonesToStudents(idPhones);
+		log.debug("students having marks greater than {} are {}", markThreshold, res);
+		return res;
 	}
 
 	@Override
 	public List<Student> getStudentsFewMarks(int nMarks) {
-		// Will be implemented on the CW #72
-		return null;
+		List<IdPhone> idPhones = studentRepo.findFewMarks(nMarks);
+		List<Student> res = idPhonesToStudents(idPhones);
+		log.debug("student having amount of marks less than {} are {}",nMarks, res );
+		return res;
 	}
 
 	@Override
@@ -157,5 +170,97 @@ public class StudentsServiceImpl implements StudentsService {
 				markThreshold);
 		return res;
 	}
+
+	@Override
+	public List<Mark> getStudentMarksSubject(long id, String subject) {
+		if(!studentRepo.existsById(id)) {
+			throw new StudentNotFoundException();
+		}
+		MatchOperation matchStudentOperation =
+				Aggregation.match(Criteria.where("id").is(id));
+		UnwindOperation unwindOperation = Aggregation.unwind("marks");
+		MatchOperation matchSubject =
+				Aggregation.match(Criteria.where("marks.subject").is(subject));
+		ProjectionOperation projectOperation = Aggregation.project("marks.subject",
+				"marks.score", "marks.date");
+		Aggregation pipeline = Aggregation.newAggregation(matchStudentOperation,
+				unwindOperation, matchSubject,projectOperation);
+		var aggregationResult = mongoTemplate.aggregate(pipeline, StudentDoc.class,
+				Document.class);
+		List<Document> documents = aggregationResult.getMappedResults();
+		log.debug("received {} documents", documents.size());
+		List<Mark> res = documents.stream()
+				.map(d -> new Mark(d.getString("subject"), d.getInteger("score"),
+						d.getDate("date").toInstant()
+					      .atZone(ZoneId.systemDefault())
+					      .toLocalDate()))
+				.toList();
+		log.debug("marks of subject {} of student {} are {}", subject, id, res);
+		return res;
+	}
+
+	@Override
+	public List<StudentAvgScore> getStudentsAvgScoreGreater(int avgThreshold) {
+		UnwindOperation unwindOperation = Aggregation.unwind("marks");
+		GroupOperation groupOperation = Aggregation.group("id").avg("marks.score")
+				.as("avgScore");
+		MatchOperation matchOperation = Aggregation.match(Criteria.where("avgScore")
+				.gt(avgThreshold));
+		SortOperation sortOperation = Aggregation.sort(Direction.DESC, "avgScore");
+		Aggregation pipeline = Aggregation.newAggregation(unwindOperation, groupOperation,
+				matchOperation, sortOperation);
+		var aggregationResult = mongoTemplate.aggregate(pipeline, StudentDoc.class, Document.class);
+		List<Document> documents = aggregationResult.getMappedResults();
+		List<StudentAvgScore> res =
+				documents.stream()
+				.map(d -> new StudentAvgScore(d.getLong("_id"), d.getDouble("avgScore").intValue()))
+				.toList();
+		log.debug("students with avg scores greater than {} are {}", avgThreshold, res);
+		return res;
+	}
+
+	@Override
+	public List<Student> getStudentsAllGoodMarksSubject(String subject, int thresholdScore) {
+		// TODO the same as the method getStudentsAllGoodMarks but for a given subject
+		// consider additional condition for "subject" in the query object
+		return null;
+	}
+
+	@Override
+	public List<Student> getStudentsMarksAmountBetween(int min, int max) {
+		// TODO get students having amount of marks in the closed range [min, max]
+		// consider using operator $and inside $expr object like $expr:{$and:[{....},{...}]
+		//{....} - contains the object similar to the query of repository method List<IdPhone> findFewMarks(int nMarks);
+		return null;
+	}
+
+	@Override
+	public List<Mark> getStudentMarksAtDates(long id, LocalDate from, LocalDate to) {
+		// TODO gets only marks on the dates in a closed range [from, to]
+		// of a given student (the same as getStudentsMarksSubject just different match operation
+		// think of DRY (Don't Repeat Yourself)
+		return null;
+	}
+
+	@Override
+	public List<String> getBestStudents(int nStudents) {
+		//gets list of a given number of the best students
+		//Best students are the ones who have most scores greater than 80
+		//consider aggregation method count() instead of avg() that we have used at CW #72
+		// and LimitOperation as additional AggregationOperation
+		return null;
+	}
+
+	@Override
+	public List<String> getWorstStudents(int nStudents) {
+		// TODO gets list of a given number of the worst students
+		//Worst students are the ones who have least sum's of all scores
+		//Students who have no scores at all should be considered as worst
+		//instead of GroupOperation to apply AggregationExpression
+		// (with AccumulatorOperators.Sum) and
+		// ProjectionOperation for adding new fields with computed values from AggregationExpression
+		return null;
+	}
+	
 
 }
