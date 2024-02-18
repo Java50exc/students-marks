@@ -243,8 +243,8 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
-	public List<String> getBestStudents(int nStudents) {
-		//gets list of a given number of the best students
+	public List<Long> getBestStudents(int nStudents) {
+		//gets list of a given number of the best student id's
 		//Best students are the ones who have most scores greater than 80
 		//consider aggregation method count() instead of avg() that we have used at CW #72
 		// and LimitOperation as additional AggregationOperation
@@ -252,10 +252,10 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
-	public List<String> getWorstStudents(int nStudents) {
-		// TODO gets list of a given number of the worst students
+	public List<Long> getWorstStudents(int nStudents) {
+		// TODO gets list of a given number of the worst student id's
 		//Worst students are the ones who have least sum's of all scores
-		//Students who have no scores at all should be considered as worst
+		//Students who have no scores at all should be considered as the worst ones
 		//instead of GroupOperation to apply AggregationExpression
 		// (with AccumulatorOperators.Sum) and
 		// ProjectionOperation for adding new fields with computed values from AggregationExpression
