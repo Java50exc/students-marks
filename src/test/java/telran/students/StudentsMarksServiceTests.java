@@ -126,6 +126,37 @@ class StudentsMarksServiceTests {
 		assertIterableEquals(expected, studentsService.getStudentsAvgScoreGreater(90));
 		
 	}
-	//TODO tests of the service methods of the HW #72
+	// tests of the service methods of the HW #72
+	@Test
+	void getStudentMarksAtDatesTest() {
+		List<Mark> expected = List.of(new Mark(SUBJECT1, 70, DATE3),
+				new Mark(SUBJECT4, 70, DATE4));
+		assertIterableEquals(expected,
+				studentsService.getStudentMarksAtDates(ID4, DATE3, DATE4));
+		assertTrue(studentsService.getStudentMarksAtDates(ID4, DATE1, DATE2).isEmpty());
+	}
+	@Test
+	void getStudentsAllGoodMarksSubjectTest() {
+		List<Student> expected = List.of(students[5]);
+		assertIterableEquals(expected, studentsService.getStudentsAllGoodMarksSubject(SUBJECT1, 70));
+		assertTrue(studentsService.getStudentsAllGoodMarksSubject(SUBJECT_NOT_EXIST, 70).isEmpty());
+		assertTrue(studentsService.getStudentsAllGoodMarksSubject(SUBJECT1, 100).isEmpty());
+	}
+	@Test
+	void getStudentsMarksAmountBetweenTest() {
+		List<Student> expected = List.of(students[3], students[4]);
+		assertIterableEquals(expected, studentsService.getStudentsMarksAmountBetween(1, 2));
+		assertTrue(studentsService.getStudentsMarksAmountBetween(5, 6).isEmpty());
+	}
+	@Test
+	void getBestStudentsTest() {
+		List<Long> expected = List.of(ID6, ID2);
+		assertIterableEquals(expected, studentsService.getBestStudents(2));
+	}
+	@Test
+	void getWorstStudentsTest() {
+		List<Long> expected = List.of(ID7, ID5);
+		assertIterableEquals(expected, studentsService.getWorstStudents(2));
+	}
 
 }

@@ -25,5 +25,11 @@ List<IdPhone> findAllGoodMarks(int markThreshold);
 /**********************************************************/
 @Query("{$expr:{$lt:[{$size:$marks}, ?0]}}")
 List<IdPhone> findFewMarks(int nMarks);
+/*******************/
+@Query("{$and:[{marks:{$elemMatch:{score:{$gt:?0}, subject:?1}}},{marks:{$not:{$elemMatch:{score:{$lte:?0}, subject:?1}}}}]}")
+List<IdPhone> findAllGoodSubjectMarks(int markThreshold, String subject);
+/**********************************************************/
+@Query("{$expr:{$and:[{$gte:[{$size:$marks}, ?0]},{$lte:[{$size:$marks}, ?1]}]}}")
+List<IdPhone> findBetweenMarksAmount(int min, int max);
 
 }
