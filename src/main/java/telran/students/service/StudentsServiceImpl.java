@@ -1,5 +1,6 @@
 package telran.students.service;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -68,12 +69,7 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
-	public Student removeStudent(long id) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
+	@Transactional
 	public Student getStudent(long id) {
 		StudentDoc studentDoc = studentRepo.findStudentNoMarks(id);
 		if (studentDoc == null) {
@@ -86,6 +82,7 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
+	@Transactional
 	public List<Mark> getMarks(long id) {
 		StudentDoc studentDoc = studentRepo.findStudentOnlyMarks(id);
 		if (studentDoc == null) {
@@ -99,18 +96,7 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
-	public List<Student> getStudentsAllGoodMarks(int markThreshold) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public List<Student> getStudentsFewMarks(int nMarks) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
+	@Transactional
 	public Student getStudentByPhoneNumber(String phoneNumber) {
 		IdPhone idPhone = studentRepo.findByPhone(phoneNumber);
 		Student res = null;
@@ -124,11 +110,60 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
+	@Transactional
 	public List<Student> getStudentsByPhonePrefix(String prefix) {
 		List<IdPhone> idPhones = studentRepo.findByPhoneRegex(prefix + ".+");
 		List<Student> res = idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
 		log.debug("students {}", res);
 		return res;
+	}
+
+	@Override
+	@Transactional
+	public List<Student> getStudentsMarksDate(LocalDate date) {
+		List<IdPhone> idPhones = studentRepo.findByMarksDate(date);
+		List<Student> res = idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+		log.debug("students {}", res);
+		return res;
+	}
+
+	@Override
+	@Transactional
+	public List<Student> getStudentsMarksMonthYear(int month, int year) {
+		LocalDate from = LocalDate.of(year, month, 1);
+		LocalDate to = from.plusMonths(1).minusDays(1);
+		List<IdPhone> idPhones = studentRepo.findByMarksDateBetween(from, to);
+		List<Student> res = idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+		log.debug("students {}", res);
+		return res;
+	}
+
+	@Override
+	@Transactional
+	public List<Student> getStudentsGoodSubjectMark(String subject, int markThreshold) {
+		List<StudentDoc> studentDocs = studentRepo.findBySubjectAndScoreGreaterThan(subject, markThreshold);
+		List<Student> res = studentDocs.stream().map(doc -> doc.build()).toList();
+		log.debug("students {}", res);
+		return res;
+	}
+	
+	
+	@Override
+	public Student removeStudent(long id) {
+		// TODO CW72
+		return null;
+	}
+	
+	@Override
+	public List<Student> getStudentsAllGoodMarks(int markThreshold) {
+		// TODO CW72
+		return null;
+	}
+
+	@Override
+	public List<Student> getStudentsFewMarks(int nMarks) {
+		// TODO CW72
+		return null;
 	}
 
 }
