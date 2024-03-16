@@ -1,5 +1,7 @@
 package telran.students.service;
 
+import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -7,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import telran.students.dto.Mark;
 import telran.students.dto.Student;
+import telran.students.exceptions.MarkIllegalStateException;
 import telran.students.exceptions.StudentIllegalStateException;
 import telran.students.exceptions.StudentNotFoundException;
 import telran.students.model.StudentDoc;
@@ -31,9 +34,23 @@ public class StudentsServiceImpl implements StudentsService {
 	}
 
 	@Override
+	@Transactional
 	public Mark addMark(long id, Mark mark) {
-		// TODO Auto-generated method stub
-		return null;
+		StudentDoc studentDoc = studentRepo.findById(id).orElseThrow(() -> {
+			log.error("student with id {} not found", id);
+			return new StudentNotFoundException();
+		});
+		log.debug("student with id {} has been found", studentDoc.getId());
+		List<Mark> marks = studentDoc.getMarks();
+		
+		if (marks.contains(mark)) {
+			log.error("mark {} already exists in the list of student with id {}", mark, studentDoc.getId());
+			throw new MarkIllegalStateException();
+		}
+		marks.add(mark);
+		studentDoc = studentRepo.save(studentDoc);
+		log.debug("mark {} succesfully added and the the student with id {} has been saved, list of marks {}", mark, studentDoc.getId(), studentDoc.getMarks());
+		return mark;
 	}
 
 	@Override
