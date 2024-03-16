@@ -13,6 +13,7 @@ import telran.students.exceptions.MarkIllegalStateException;
 import telran.students.exceptions.StudentIllegalStateException;
 import telran.students.exceptions.StudentNotFoundException;
 import telran.students.model.StudentDoc;
+import telran.students.repo.IdPhone;
 import telran.students.repo.StudentRepo;
 @Service
 @RequiredArgsConstructor
@@ -63,6 +64,70 @@ public class StudentsServiceImpl implements StudentsService {
 		studentDoc.setPhone(phoneNumber);
 		Student res = studentRepo.save(studentDoc).build();
 		log.debug("Student {} has been saved ", res);
+		return res;
+	}
+
+	@Override
+	public Student removeStudent(long id) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Student getStudent(long id) {
+		StudentDoc studentDoc = studentRepo.findStudentNoMarks(id);
+		if (studentDoc == null) {
+			throw new StudentNotFoundException();
+		}
+		log.debug("marks of found student {}", studentDoc.getMarks());
+		Student student = studentDoc.build();
+		log.debug("found student {}", student);
+		return student;
+	}
+
+	@Override
+	public List<Mark> getMarks(long id) {
+		StudentDoc studentDoc = studentRepo.findStudentOnlyMarks(id);
+		if (studentDoc == null) {
+			throw new StudentNotFoundException();
+		}
+		List<Mark> res = studentDoc.getMarks();
+		log.debug("phone: {}, id: {}", studentDoc.getPhone(), studentDoc.getId());
+		log.debug("marks of found student {}", studentDoc.getMarks());
+		
+		return res;
+	}
+
+	@Override
+	public List<Student> getStudentsAllGoodMarks(int markThreshold) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public List<Student> getStudentsFewMarks(int nMarks) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Student getStudentByPhoneNumber(String phoneNumber) {
+		IdPhone idPhone = studentRepo.findByPhone(phoneNumber);
+		Student res = null;
+		
+		if (idPhone != null) {
+			res = new Student(idPhone.getId(), idPhone.getPhone());
+		}
+		log.debug("student {}", res);
+		
+		return res;
+	}
+
+	@Override
+	public List<Student> getStudentsByPhonePrefix(String prefix) {
+		List<IdPhone> idPhones = studentRepo.findByPhoneRegex(prefix + ".+");
+		List<Student> res = idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+		log.debug("students {}", res);
 		return res;
 	}
 
