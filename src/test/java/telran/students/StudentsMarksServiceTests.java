@@ -201,6 +201,33 @@ class StudentsMarksServiceTests {
 	void getStudentsGoodSubjectMark_noStudents_emptyList() {
 		assertArrayEquals(new Student[0], studentsService.getStudentsGoodSubjectMark(SUBJECT1, 100).toArray(Student[]::new));
 	}
+	
+	@Test
+	void getStudentsAllGoodMarks() {
+		List<Student> expected = List.of(students[4], students[5]);
+		assertIterableEquals(expected, studentsService.getStudentsAllGoodMarks(70));
+		assertTrue(studentsService.getStudentsAllGoodMarks(100).isEmpty());
+	}
+	
+	@Test
+	void getStudentMarksSubject() {
+		List<Mark> expected = List.of(marks[0][0], marks[0][1]);
+		assertIterableEquals(expected, studentsService.getStudentMarksSubject(ID1, SUBJECT1));
+		assertTrue(studentsService.getStudentMarksSubject(ID1, SUBJECT3).isEmpty());
+		assertThrowsExactly(StudentNotFoundException.class, () -> studentsService.getStudentMarksSubject(ID_NOT_EXISTS, SUBJECT1));
+	}
+	
+	@Test
+	void getStudentsFewMarks() {
+		List<Student> expected = List.of(students[6]);
+		assertIterableEquals(expected, studentsService.getStudentsFewMarks(1));
+	}
+	
+	@Test
+	void getStudentsAvgScoreGreater() {
+		List<StudentAvgScore> expected = List.of(new StudentAvgScore(ID6, 100), new StudentAvgScore(ID5, 95));
+		assertIterableEquals(expected, studentsService.getStudentsAvgScoreGreater(90));
+	}
 
 
 }

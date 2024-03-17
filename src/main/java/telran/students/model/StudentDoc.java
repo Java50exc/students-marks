@@ -19,7 +19,7 @@ public class StudentDoc {
 	@Setter
 	String phone;
 	List<Mark> marks = new ArrayList<>();
-	
+	 
 	public StudentDoc(Student student) {
 		id = student.id();
 		phone = student.phone();

@@ -53,4 +53,7 @@ public interface StudentsService {
 	 */
 	List<Student> getStudentsFewMarks(int nMarks);
 	/***************************/
+	
+	List<Mark> getStudentMarksSubject(long id, String subject);
+	List<StudentAvgScore> getStudentsAvgScoreGreater(int avgThreshold); 
 }

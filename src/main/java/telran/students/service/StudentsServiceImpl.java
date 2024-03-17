@@ -1,31 +1,36 @@
 package telran.students.service;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
+import org.bson.Document;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import telran.students.dto.Mark;
-import telran.students.dto.Student;
-import telran.students.exceptions.MarkIllegalStateException;
-import telran.students.exceptions.StudentIllegalStateException;
-import telran.students.exceptions.StudentNotFoundException;
+import telran.students.dto.*;
+import telran.students.exceptions.*;
 import telran.students.model.StudentDoc;
-import telran.students.repo.IdPhone;
-import telran.students.repo.StudentRepo;
+import telran.students.repo.*;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class StudentsServiceImpl implements StudentsService {
 	final StudentRepo studentRepo;
+	final MongoTemplate mongoTemplate;
+
 	@Override
 	@Transactional
 	public Student addStudent(Student student) {
 		long id = student.id();
-		if(studentRepo.existsById(id)) {
+		if (studentRepo.existsById(id)) {
 			log.error("student with id {} already exists", id);
 			throw new StudentIllegalStateException();
 		}
@@ -44,24 +49,24 @@ public class StudentsServiceImpl implements StudentsService {
 		});
 		log.debug("student with id {} has been found", studentDoc.getId());
 		List<Mark> marks = studentDoc.getMarks();
-		
+
 		if (marks.contains(mark)) {
 			log.error("mark {} already exists in the list of student with id {}", mark, studentDoc.getId());
 			throw new MarkIllegalStateException();
 		}
 		marks.add(mark);
 		studentDoc = studentRepo.save(studentDoc);
-		log.debug("mark {} succesfully added and the the student with id {} has been saved, list of marks {}", mark, studentDoc.getId(), studentDoc.getMarks());
+		log.debug("mark {} succesfully added and the the student with id {} has been saved, list of marks {}", mark,
+				studentDoc.getId(), studentDoc.getMarks());
 		return mark;
 	}
 
 	@Override
 	@Transactional
 	public Student updatePhoneNumber(long id, String phoneNumber) {
-		StudentDoc studentDoc = studentRepo.findById(id)
-				.orElseThrow(() -> new StudentNotFoundException());
-		log.debug("student with id {}, old phone number {}, new phone number {}",
-				id,studentDoc.getPhone(), phoneNumber);
+		StudentDoc studentDoc = studentRepo.findById(id).orElseThrow(() -> new StudentNotFoundException());
+		log.debug("student with id {}, old phone number {}, new phone number {}", id, studentDoc.getPhone(),
+				phoneNumber);
 		studentDoc.setPhone(phoneNumber);
 		Student res = studentRepo.save(studentDoc).build();
 		log.debug("Student {} has been saved ", res);
@@ -91,7 +96,7 @@ public class StudentsServiceImpl implements StudentsService {
 		List<Mark> res = studentDoc.getMarks();
 		log.debug("phone: {}, id: {}", studentDoc.getPhone(), studentDoc.getId());
 		log.debug("marks of found student {}", studentDoc.getMarks());
-		
+
 		return res;
 	}
 
@@ -100,12 +105,12 @@ public class StudentsServiceImpl implements StudentsService {
 	public Student getStudentByPhoneNumber(String phoneNumber) {
 		IdPhone idPhone = studentRepo.findByPhone(phoneNumber);
 		Student res = null;
-		
+
 		if (idPhone != null) {
 			res = new Student(idPhone.getId(), idPhone.getPhone());
 		}
 		log.debug("student {}", res);
-		
+
 		return res;
 	}
 
@@ -146,24 +151,68 @@ public class StudentsServiceImpl implements StudentsService {
 		log.debug("students {}", res);
 		return res;
 	}
-	
-	
+
 	@Override
 	public Student removeStudent(long id) {
 		// TODO CW72
 		return null;
 	}
-	
+
 	@Override
 	public List<Student> getStudentsAllGoodMarks(int markThreshold) {
-		// TODO CW72
-		return null;
+		List<IdPhone> idPhones = studentRepo.findAllGoodMarks(markThreshold);
+		List<Student> res = idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+		log.debug("students having marks greater than {} are {}", markThreshold, res);
+		return res;
 	}
 
 	@Override
 	public List<Student> getStudentsFewMarks(int nMarks) {
-		// TODO CW72
-		return null;
+		List<IdPhone> idPhones = studentRepo.findFewMarks(nMarks);
+		List<Student> res = idPhonesToStudents(idPhones);
+		log.debug("students having amount of marks less than {} are {}", nMarks, res);
+		return res;
+	}
+
+	private List<Student> idPhonesToStudents(List<IdPhone> idPhones) {
+		return idPhones.stream().map(ip -> new Student(ip.getId(), ip.getPhone())).toList();
+	}
+
+	@Override
+	public List<Mark> getStudentMarksSubject(long id, String subject) {
+		if (!studentRepo.existsById(id)) {
+			throw new StudentNotFoundException();
+		}
+		MatchOperation matchStudentOperation = Aggregation.match(Criteria.where("id").is(id));
+		UnwindOperation unwindOperation = Aggregation.unwind("marks");
+		MatchOperation matchSubject = Aggregation.match(Criteria.where("marks.subject").is(subject));
+		ProjectionOperation projectOperation = Aggregation.project("marks.subject", "marks.score", "marks.date");
+		Aggregation pipeline = Aggregation.newAggregation(matchStudentOperation, unwindOperation, matchSubject,
+				projectOperation);
+
+		var aggregationResult = mongoTemplate.aggregate(pipeline, StudentDoc.class, Document.class);
+		List<Document> documents = aggregationResult.getMappedResults();
+		log.debug("received {} documents", documents.size());
+		List<Mark> res = documents.stream().map(d -> new Mark(d.getString("subject"), d.getInteger("score"),
+				d.getDate("date").toInstant().atZone(ZoneId.systemDefault()).toLocalDate())).toList();
+		log.debug("marks of subject {} of student {} are {}", subject, id, res);
+		return res;
+	}
+
+	@Override
+	public List<StudentAvgScore> getStudentsAvgScoreGreater(int avgThreshold) {
+		UnwindOperation unwindOperation = Aggregation.unwind("marks");
+		GroupOperation groupOperation = Aggregation.group("id").avg("marks.score").as("avgScore");
+		MatchOperation matchOperation = Aggregation.match(Criteria.where("avgScore").gt(avgThreshold));
+		SortOperation sortOperation = Aggregation.sort(Direction.DESC, "avgScore");
+		Aggregation pipeline = Aggregation.newAggregation(unwindOperation, groupOperation, matchOperation,
+				sortOperation);
+		var aggregationResult = mongoTemplate.aggregate(pipeline, StudentDoc.class, Document.class);
+		List<Document> documents = aggregationResult.getMappedResults();
+		List<StudentAvgScore> res = documents.stream()
+				.map(d -> new StudentAvgScore(d.getLong("_id"), d.getDouble("avgScore").intValue())).toList();
+		log.debug("students with avg scores greater than {} are {}", avgThreshold, res);
+		return res;
 	}
 
 }
