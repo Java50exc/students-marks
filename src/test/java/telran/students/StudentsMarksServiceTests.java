@@ -245,6 +245,57 @@ class StudentsMarksServiceTests {
 		List<StudentAvgScore> expected = List.of(new StudentAvgScore(ID6, 100), new StudentAvgScore(ID5, 95));
 		assertIterableEquals(expected, studentsService.getStudentsAvgScoreGreater(90));
 	}
+	
+	@Test
+	void getStudentsAllGoodMarksSubject_correctFlow_success() {
+		List<Student> expected = List.of(students[0], students[5]);
+		assertIterableEquals(expected, studentsService.getStudentsAllGoodMarksSubject(SUBJECT2, 70));
+	}
+	
+	@Test
+	void getStudentsAllGoodMarksSubject_noStudent_emptyList() {
+		assertTrue(studentsService.getStudentsAllGoodMarksSubject(SUBJECT2, 100).isEmpty());
+	}
+	
+	@Test
+	void getStudentsMarksAmountBetween_correctFlow_success() {
+		List<Student> expected = List.of(students[3], students[4]);
+		assertIterableEquals(expected, studentsService.getStudentsMarksAmountBetween(1, 2));
+	}
+	
+	@Test
+	void getStudentsMarksAmountBetween_noStudent_emptyList() {
+		assertTrue(studentsService.getStudentsMarksAmountBetween(10, 20).isEmpty());
+	}
+	
+	@Test
+	void getStudentMarksAtDates_correctFlow_success() {
+		List<Mark> expected = List.of(marks[0][0], marks[0][1]);
+		assertIterableEquals(expected, studentsService.getStudentMarksAtDates(ID1, DATE1, DATE2));
+	}
+	
+	@Test
+	void getStudentMarksAtDates_noMarks_emptyList() {
+		assertTrue(studentsService.getStudentMarksAtDates(ID1, DATE_NO_MARKS, DATE_NO_MARKS).isEmpty());
+	}
+	
+	@Test
+	void getStudentMarksAtDates_studentNotExists_throwsException() {
+		assertThrowsExactly(StudentNotFoundException.class, () -> studentsService.getStudentMarksAtDates(ID_NOT_EXISTS, DATE1, DATE2));
+	}
+	
+	@Test
+	void getBestStudents_correctFlow_success() {
+		List<Long> expected = List.of(ID6);
+		assertIterableEquals(expected, studentsService.getBestStudents(1));
+	}
+	
+	@Test
+	void getWorstStudents_correctFlow_success() {
+		List<Long> expected = List.of(ID7);
+		assertIterableEquals(expected, studentsService.getWorstStudents(1));
+	}
+	
 
 
 }
