@@ -214,5 +214,50 @@ public class StudentsServiceImpl implements StudentsService {
 		log.debug("students with avg scores greater than {} are {}", avgThreshold, res);
 		return res;
 	}
+	
+	@Override
+	public List<Student> getStudentsAllGoodMarksSubject(String subject, int thresholdScore) {
+		// TODO the same as the method getStudentsAllGoodMarks but for a given subject
+		// consider additional condition for "subject" in the query object
+		return null;
+	}
+
+	@Override
+	public List<Student> getStudentsMarksAmountBetween(int min, int max) {
+		// TODO get students having amount of marks in the closed range [min, max]
+		// consider using operator $and inside $expr object like $expr:{$and:[{....},{...}]
+		//{....} - contains the object similar to the query of repository method List<IdPhone> findFewMarks(int nMarks);
+		return null;
+	}
+
+	@Override
+	public List<Mark> getStudentMarksAtDates(long id, LocalDate from, LocalDate to) {
+		// TODO gets only marks on the dates in a closed range [from, to]
+		// of a given student (the same as getStudentsMarksSubject just different match operation
+		// think of DRY (Don't Repeat Yourself)
+		return null;
+	}
+
+	@Override
+	public List<Long> getBestStudents(int nStudents) {
+		//gets list of a given number of the best student id's
+		//Best students are the ones who have most scores greater than 80
+		//consider aggregation method count() instead of avg() that we have used at CW #72
+		// and LimitOperation as additional AggregationOperation
+		return null;
+	}
+
+	@Override
+	public List<Long> getWorstStudents(int nStudents) {
+		// TODO gets list of a given number of the worst student id's
+		//Worst students are the ones who have least sum's of all scores
+		//Students who have no scores at all should be considered as the worst ones
+		//instead of GroupOperation to apply AggregationExpression
+		// (with AccumulatorOperators.Sum) and
+		// ProjectionOperation for adding new fields with computed values from AggregationExpression
+		return null;
+	}
+	
+
 
 }
